@@ -20,9 +20,14 @@ def mail():
 	app.config['MAIL_PASSWORD'] = 'samsunghp'
 	mail = Mail(app)
 	form_data = request.form['msg']
+	sender_name = request.form['name']
+	sender_email = str(request.form['email'])
 	msg = Message('Query',sender = 'dibyadasiscool@gmail.com', recipients = ['dibyadas998@gmail.com'])
 	msg.body = form_data
 	mail.send(msg)
+	msg_user = Message("KOSS:query recieved will be responded soon",sender = 'dibyadasiscool@gmail.com', recipients = [sender_email])
+	msg_user.body = "Hi "+sender_name+" ,\n\n"+"Your message has been recieved by us and we will responded to it soon."+"\nThank-you for communicating with us hope your query will cleared by our team."+"\n\n\nKOSS IIT Khragpur"
+	mail.send(msg_user)
 	return ("sent",200,{'Access-Control-Allow-Origin':'*'})
 
 # if __name__ == "__main__":  # This is for local testin
