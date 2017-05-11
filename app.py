@@ -1,48 +1,46 @@
 from flask import Flask, redirect, url_for, request, render_template
-import requests
+from urllib.request import urlopen
 import json
 
-# global variables to store repo and repo links
-repos=[]
-repolink=[]
-image=""
 
-# module to generate repo and repo links
-def repogen(user_name):
-    global repos
-    global repolink
-    global image
-    repos=[]
-    repolink=[]
-    
-    # getting contents of the api for a user
-    httpob=requests.get("https://api.github.com/users/"+user_name+"/repos?per_page=100")
-    # decoding the http object recieved
-    decob=httpob.content.decode("utf-8")
-    # converting to json
-    jsonob=json.loads(decob)
-    image = jsonob[0]['owner']['avatar_url']
-    # appending only personal repos to the list
-    for j in jsonob:
-        if j["fork"] != True:
-            repos.append(j["full_name"])
-            repolink.append("https://www.github.com/"+j["full_name"])
-            
+data = {"arindambiswas":{"name":"Arindam Biswas", "gh_handle":"aribis369" ,"fb_link":"https://facebook.com/aribis369", "bio":"to be written by the member", "pic_src":"link", "role":"Core Team Member"}, "dibyaprakashdas":{"name":"Dibya Prakash Das", "gh_handle":"dibyadas", "fb_link":"https://facebook.com/user_name", "bio":"whatever you like", "pic_src":"link", "role":"Core Team Member"}}
+
 
 app = Flask(__name__)
 
 
 @app.route('/<name>')
 def main(name):
-    # generating repo and repolink list before rendering the html file
-    # list to be passed while rendering & some more credentials can be added 
-    repogen(name)
-    repo_dict = dict(zip(repos,repolink))
-    x = render_template('temp.html', name=name ,image=image, repo_dict=repo_dict)
+    mname = data[name]["gh_handle"]
+    repos = []
+    repolink = []
+    blog = str()
+    pic=str()
+    content={}
+    gh_link = "https://github.com/"+mname
+
+    httpob = urlopen("https://api.github.com/users/"+mname+"/repos")
+    decob = httpob.read().decode("utf-8")
+    jsonob = json.loads(decob)
+    for j in jsonob:
+        if str(j["fork"])=="False":
+            repos.append(j["name"])
+            repolink.append("https://www.github.com/"+j["full_name"])
+    
+    httpob = urlopen("https://api.github.com/users/"+mname)
+    decob = httpob.read().decode("utf-8")
+    jsonob = json.loads(decob)
+    blog = jsonob["blog"]
+    pic=jsonob["avatar_url"]
+    bio=jsonob["bio"]
+
+    content = {"name":data[name]["name"], "gh_handle":data[name]["gh_handle"], "fblink":data[name]["fb_link"], "bio":bio, "picsrc":pic, "repos":repos, "repolink":repolink, "blog":blog, "role":data[name]["role"]}
+
+   # return render_template('test.html', mem_name=data[name]["name"], gh_handle=data[name]["gh_handle"], fblink=data[name]["fb_link"], bio=data[name]["bio"], picsrc=data[name]["pic_src"], mrepos=repos, mrepolink=repolink, mblog=blog) 
+    x = render_template('temp.html', content=content)
     with open("templates/t2.html","w") as f:
         f.write(x)
     return "True"
-
 
 if __name__ == "__main__":  # This is for local testing
     app.run(host='localhost', port=3453, debug=True)
